@@ -7,11 +7,21 @@
 #include "advancedclasses.h"
 #include "swrapper.h"
 
-class ContainerModel : public AdvancedItemModel
+class FieldsViewport : public QWidget
 {
 	Q_OBJECT
 public:
-	explicit ContainerModel(QObject *p = nullptr);
+	explicit FieldsViewport(QWidget *p = nullptr);
+
+protected:
+	void paintEvent(QPaintEvent *e);
+};
+
+class FieldsModel : public AdvancedItemModel
+{
+	Q_OBJECT
+public:
+	explicit FieldsModel(QObject *p = nullptr);
 	void setWrapper(SWrapper *w);
 
 	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
@@ -28,39 +38,44 @@ public:
 
 	enum Accesses {
 		Text = Qt::DisplayRole +1,
-		Pixmap
+		Content
 	};
 
+	void setTargetContainer(QString n);
+
 private:
-	QList<QString> containers;
+	QList<QString> fields;
+	QString fieldName = "";
 	SWrapper *wrap = nullptr;
+
+	void setupContent();
 };
 
-class ContainerDelegate : public AdvancedItemDelegate
+class FieldsDelegate : public AdvancedItemDelegate
 {
 	Q_OBJECT
 public:
-	explicit ContainerDelegate(AdvancedListView *p = nullptr);
+	explicit FieldsDelegate(AdvancedListView *p = nullptr);
 
 	void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override;
 	QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const override;
 
-Q_SIGNALS:
-	void clicked(QString);
+	bool isInIcon(const QPoint &p, const QModelIndex &index, const QStyleOptionViewItem &opt) const;
 
 protected:
-	QVariant isInDecoration(const QPoint &p, const QModelIndex &index, const QStyleOptionViewItem &opt) const override;
 	QVariant handleRelease(const QPoint &p, const QModelIndex &index, const QStyleOptionViewItem &opt) override;
+	QVariant handlePress(const QPoint &p, const QModelIndex &index, const QStyleOptionViewItem &opt) override;
+	QVariant isInDecoration(const QPoint &p, const QModelIndex &index, const QStyleOptionViewItem &opt) const override;
+
+	bool m_isInIcon = false;
 };
 
-class ContainerListView : public AdvancedListView
+class FieldsListView : public AdvancedListView
 {
 	Q_OBJECT
 public:
-	explicit ContainerListView(QWidget *p = nullptr);
+	explicit FieldsListView(QWidget *p = nullptr);
 
-	ContainerModel *getContainerModel();
-
-Q_SIGNALS:
-	void selectionChanged(QString);
+	void setContainer(QString n);
+	FieldsModel *getFieldsModel();
 };
